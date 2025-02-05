@@ -1901,7 +1901,6 @@ convertOmpTaskOp(omp::TaskOp taskOp, llvm::IRBuilderBase &builder,
       moduleTranslation, allocaIP);
 
   // Allocate and initialize private variables
-  // TODO: package private variables up in a structure
   builder.SetInsertPoint(initBlock->getTerminator());
 
   // Create task variable structure
