@@ -209,8 +209,8 @@ New checks
   Detects variables and functions that can be marked as static or moved into
   an anonymous namespace to enforce internal linkage.
 
-- New :doc:`modernize-UseCheckedArithmetic
-  <clang-tidy/checks/modernize/UseCheckedArithmetic>` check.
+- New :doc:`modernize-use-checked-arithmetic
+  <clang-tidy/checks/modernize/use-checked-arithmetic>` check.
 
   FIXME: add release notes.
 

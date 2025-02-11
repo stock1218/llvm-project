@@ -50,7 +50,7 @@
 #include "UseTransparentFunctorsCheck.h"
 #include "UseUncaughtExceptionsCheck.h"
 #include "UseUsingCheck.h"
-#include "UsecheckedarithmeticCheck.h"
+#include "UseCheckedArithmeticCheck.h"
 
 using namespace clang::ast_matchers;
 
@@ -60,8 +60,8 @@ namespace modernize {
 class ModernizeModule : public ClangTidyModule {
 public:
   void addCheckFactories(ClangTidyCheckFactories &CheckFactories) override {
-    CheckFactories.registerCheck<UsecheckedarithmeticCheck>(
-        "modernize-UseCheckedArithmetic");
+    CheckFactories.registerCheck<UseCheckedArithmeticCheck>(
+        "modernize-use-checked-arithmetic");
     CheckFactories.registerCheck<AvoidBindCheck>("modernize-avoid-bind");
     CheckFactories.registerCheck<AvoidCArraysCheck>("modernize-avoid-c-arrays");
     CheckFactories.registerCheck<ConcatNestedNamespacesCheck>(

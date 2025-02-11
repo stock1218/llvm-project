@@ -1,4 +1,4 @@
-//===--- UsecheckedarithmeticCheck.cpp - clang-tidy -----------------------===//
+//===--- UseCheckedArithmeticCheck.cpp - clang-tidy -----------------------===//
 //
 // Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
 // See https://llvm.org/LICENSE.txt for license information.
@@ -6,19 +6,19 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "UsecheckedarithmeticCheck.h"
+#include "UseCheckedArithmeticCheck.h"
 #include "clang/ASTMatchers/ASTMatchFinder.h"
 
 using namespace clang::ast_matchers;
 
 namespace clang::tidy::modernize {
 
-void UsecheckedarithmeticCheck::registerMatchers(MatchFinder *Finder) {
+void UseCheckedArithmeticCheck::registerMatchers(MatchFinder *Finder) {
   // FIXME: Add matchers.
   Finder->addMatcher(functionDecl().bind("x"), this);
 }
 
-void UsecheckedarithmeticCheck::check(const MatchFinder::MatchResult &Result) {
+void UseCheckedArithmeticCheck::check(const MatchFinder::MatchResult &Result) {
   // FIXME: Add callback implementation.
   const auto *MatchedDecl = Result.Nodes.getNodeAs<FunctionDecl>("x");
   if (!MatchedDecl->getIdentifier() || MatchedDecl->getName().starts_with("awesome_"))

@@ -1,4 +1,4 @@
-//===--- UsecheckedarithmeticCheck.h - clang-tidy ---------------*- C++ -*-===//
+//===--- UseCheckedArithmeticCheck.h - clang-tidy ---------------*- C++ -*-===//
 //
 // Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
 // See https://llvm.org/LICENSE.txt for license information.
@@ -17,9 +17,9 @@ namespace clang::tidy::modernize {
 ///
 /// For the user-facing documentation see:
 /// http://clang.llvm.org/extra/clang-tidy/checks/modernize/UseCheckedArithmetic.html
-class UsecheckedarithmeticCheck : public ClangTidyCheck {
+class UseCheckedArithmeticCheck : public ClangTidyCheck {
 public:
-  UsecheckedarithmeticCheck(StringRef Name, ClangTidyContext *Context)
+  UseCheckedArithmeticCheck(StringRef Name, ClangTidyContext *Context)
       : ClangTidyCheck(Name, Context) {}
   void registerMatchers(ast_matchers::MatchFinder *Finder) override;
   void check(const ast_matchers::MatchFinder::MatchResult &Result) override;
