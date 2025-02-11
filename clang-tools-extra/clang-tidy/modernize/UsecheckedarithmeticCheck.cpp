@@ -8,25 +8,23 @@
 
 #include "UseCheckedArithmeticCheck.h"
 #include "clang/ASTMatchers/ASTMatchFinder.h"
+#include "clang/Tooling/Transformer/Stencil.h"
 
 using namespace clang::ast_matchers;
+using namespace clang::transformer;
 
 namespace clang::tidy::modernize {
 
-void UseCheckedArithmeticCheck::registerMatchers(MatchFinder *Finder) {
-  // FIXME: Add matchers.
-  Finder->addMatcher(functionDecl().bind("x"), this);
+auto createAddCheckedStatementRule() {
+  auto rule = makeRule(traverse(clang::TK_IgnoreUnlessSpelledInSource,
+                                binaryOperation(hasOperatorName("+"))),
+                       changeTo(cat("bruh")), cat("MODIFIED"));
+  return rule;
 }
 
-void UseCheckedArithmeticCheck::check(const MatchFinder::MatchResult &Result) {
-  // FIXME: Add callback implementation.
-  const auto *MatchedDecl = Result.Nodes.getNodeAs<FunctionDecl>("x");
-  if (!MatchedDecl->getIdentifier() || MatchedDecl->getName().starts_with("awesome_"))
-    return;
-  diag(MatchedDecl->getLocation(), "function %0 is insufficiently awesome")
-      << MatchedDecl
-      << FixItHint::CreateInsertion(MatchedDecl->getLocation(), "awesome_");
-  diag(MatchedDecl->getLocation(), "insert 'awesome'", DiagnosticIDs::Note);
+transformer::RewriteRuleWith<std::string>
+UseCheckedArithmeticCheck::createCheckedStatementRule() {
+  return applyFirst({createAddCheckedStatementRule()});
 }
 
 } // namespace clang::tidy::modernize

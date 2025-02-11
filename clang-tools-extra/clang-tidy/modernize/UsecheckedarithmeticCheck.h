@@ -10,19 +10,26 @@
 #define LLVM_CLANG_TOOLS_EXTRA_CLANG_TIDY_MODERNIZE_USECHECKEDARITHMETICCHECK_H
 
 #include "../ClangTidyCheck.h"
+#include "../utils/TransformerClangTidyCheck.h"
+#include "clang/Tooling/Transformer/Stencil.h"
+
+using namespace clang::tidy::utils;
+using namespace clang::transformer;
 
 namespace clang::tidy::modernize {
 
-/// FIXME: Write a short description.
-///
-/// For the user-facing documentation see:
-/// http://clang.llvm.org/extra/clang-tidy/checks/modernize/UseCheckedArithmetic.html
-class UseCheckedArithmeticCheck : public ClangTidyCheck {
+class UseCheckedArithmeticCheck : public TransformerClangTidyCheck {
 public:
   UseCheckedArithmeticCheck(StringRef Name, ClangTidyContext *Context)
-      : ClangTidyCheck(Name, Context) {}
-  void registerMatchers(ast_matchers::MatchFinder *Finder) override;
-  void check(const ast_matchers::MatchFinder::MatchResult &Result) override;
+      : TransformerClangTidyCheck(Name, Context) {
+    setRule(createCheckedStatementRule());
+  }
+  bool isLanguageVersionSupported(const LangOptions &LangOpts) const override {
+    return C23;
+  }
+
+private:
+  static transformer::RewriteRuleWith<std::string> createCheckedStatementRule();
 };
 
 } // namespace clang::tidy::modernize
