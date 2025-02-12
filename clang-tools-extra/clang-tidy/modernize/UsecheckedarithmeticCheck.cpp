@@ -16,9 +16,26 @@ using namespace clang::transformer;
 namespace clang::tidy::modernize {
 
 auto createAddCheckedStatementRule() {
-  auto rule = makeRule(traverse(clang::TK_IgnoreUnlessSpelledInSource,
-                                binaryOperation(hasOperatorName("+"))),
-                       changeTo(cat("bruh")), cat("MODIFIED"));
+  std::string lhs;
+  std::string rhs;
+  std::string op;
+  auto rule = makeRule(
+				  traverse(
+					   clang::TK_AsIs,
+					   binaryOperator(
+						   hasOperatorName("+"),
+						   hasRHS(
+							   ignoringImpCasts(
+								   declRefExpr().bind(rhs)
+							   )
+						   ),
+						   hasLHS(expr().bind(lhs))
+					   )
+				  ),
+				  changeTo(cat("checked_add(", node(lhs), ", ", node(rhs), ")")),
+				  cat("Should use checked arithmetic here")
+			);
+
   return rule;
 }
 
