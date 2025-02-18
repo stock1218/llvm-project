@@ -16,9 +16,6 @@ using namespace clang::transformer;
 namespace clang::tidy::modernize {
 
 auto createAddCheckedStatementRule() {
-  std::string lhs;
-  std::string rhs;
-  std::string op;
   auto rule = makeRule(
 				  traverse(
 					   clang::TK_AsIs,
@@ -26,13 +23,13 @@ auto createAddCheckedStatementRule() {
 						   hasOperatorName("+"),
 						   hasRHS(
 							   ignoringImpCasts(
-								   declRefExpr().bind(rhs)
+								   declRefExpr().bind("rhs")
 							   )
 						   ),
-						   hasLHS(expr().bind(lhs))
+                           hasLHS(expr().bind("lhs"))
 					   )
 				  ),
-				  changeTo(cat("checked_add(", node(lhs), ", ", node(rhs), ")")),
+				  changeTo(cat("checked_add(", node("lhs"), ", ", node("rhs"), ")")),
 				  cat("Should use checked arithmetic here")
 			);
 
