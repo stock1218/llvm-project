@@ -1,4 +1,4 @@
-//===--- UseCheckedArithmeticCheck.h - clang-tidy ---------------*- C++ -*-===//
+//===--- UseUncaughtExceptionsCheck.h - clang-tidy------------*- C++ -*-===//
 //
 // Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
 // See https://llvm.org/LICENSE.txt for license information.
@@ -6,32 +6,30 @@
 //
 //===----------------------------------------------------------------------===//
 
-#ifndef LLVM_CLANG_TOOLS_EXTRA_CLANG_TIDY_MODERNIZE_USECHECKEDARITHMETICCHECK_H
-#define LLVM_CLANG_TOOLS_EXTRA_CLANG_TIDY_MODERNIZE_USECHECKEDARITHMETICCHECK_H
+#ifndef LLVM_CLANG_TOOLS_EXTRA_CLANG_TIDY_MODERNIZE_USE_UNCAUGHT_EXCEPTIONS_H
+#define LLVM_CLANG_TOOLS_EXTRA_CLANG_TIDY_MODERNIZE_USE_UNCAUGHT_EXCEPTIONS_H
 
 #include "../ClangTidyCheck.h"
-#include "../utils/TransformerClangTidyCheck.h"
-#include "clang/Tooling/Transformer/Stencil.h"
-
-using namespace clang::tidy::utils;
-using namespace clang::transformer;
 
 namespace clang::tidy::modernize {
 
-class UseCheckedArithmeticCheck : public TransformerClangTidyCheck {
+/// This check will warn on calls to std::uncaught_exception and replace them with calls to
+/// std::uncaught_exceptions, since std::uncaught_exception was deprecated in C++17. In case of
+/// macro ID there will be only a warning without fixits.
+///
+/// For the user-facing documentation see:
+/// http://clang.llvm.org/extra/clang-tidy/checks/modernize/use-uncaught-exceptions.html
+class UseUncaughtExceptionsCheck : public ClangTidyCheck {
 public:
-  UseCheckedArithmeticCheck(StringRef Name, ClangTidyContext *Context)
-      : TransformerClangTidyCheck(Name, Context) {
-    setRule(createCheckedStatementRule());
-  }
+  UseUncaughtExceptionsCheck(StringRef Name, ClangTidyContext *Context)
+      : ClangTidyCheck(Name, Context) {}
   bool isLanguageVersionSupported(const LangOptions &LangOpts) const override {
-    return C23;
+    return LangOpts.CPlusPlus17;
   }
-
-private:
-  static transformer::RewriteRuleWith<std::string> createCheckedStatementRule();
+  void registerMatchers(ast_matchers::MatchFinder *Finder) override;
+  void check(const ast_matchers::MatchFinder::MatchResult &Result) override;
 };
 
 } // namespace clang::tidy::modernize
 
-#endif // LLVM_CLANG_TOOLS_EXTRA_CLANG_TIDY_MODERNIZE_USECHECKEDARITHMETICCHECK_H
+#endif // LLVM_CLANG_TOOLS_EXTRA_CLANG_TIDY_MODERNIZE_USE_UNCAUGHT_EXCEPTIONS_H
