@@ -1,11 +1,3 @@
-//===--- UseUncaughtExceptionsCheck.cpp - clang-tidy--------------------===//
-//
-// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
-// See https://llvm.org/LICENSE.txt for license information.
-// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
-//
-//===----------------------------------------------------------------------===//
-
 #include "UseUncaughtExceptionsCheck.h"
 #include "clang/AST/ASTContext.h"
 #include "clang/ASTMatchers/ASTMatchFinder.h"
@@ -15,7 +7,8 @@ using namespace clang::ast_matchers;
 
 namespace clang::tidy::modernize {
 
-void UseUncaughtExceptionsCheck::registerMatchers(MatchFinder *Finder) {
+void UseCheckedArithmeticCheck::registerMatchers(MatchFinder *Finder) {
+    // TODO update, this will be used to match to our expressions
   std::string MatchText = "::std::uncaught_exception";
 
   // Using declaration: warning and fix-it.
@@ -46,7 +39,8 @@ void UseUncaughtExceptionsCheck::registerMatchers(MatchFinder *Finder) {
                      this);
 }
 
-void UseUncaughtExceptionsCheck::check(const MatchFinder::MatchResult &Result) {
+void UseCheckedArithmeticCheck::check(const MatchFinder::MatchResult &Result) {
+  // TODO this will be used to do the rewrite
   SourceLocation BeginLoc;
   SourceLocation EndLoc;
   const auto *C = Result.Nodes.getNodeAs<CallExpr>("init_call_expr");
