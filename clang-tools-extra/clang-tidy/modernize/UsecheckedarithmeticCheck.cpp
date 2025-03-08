@@ -1,4 +1,4 @@
-#include "UseUncaughtExceptionsCheck.h"
+#include "UseCheckedArithmeticCheck.h"
 #include "clang/AST/ASTContext.h"
 #include "clang/ASTMatchers/ASTMatchFinder.h"
 #include "clang/Lex/Lexer.h"
