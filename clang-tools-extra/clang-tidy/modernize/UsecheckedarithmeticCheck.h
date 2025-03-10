@@ -10,10 +10,15 @@ namespace clang::tidy::modernize {
 class UseCheckedArithmeticCheck : public ClangTidyCheck {
 public:
   UseCheckedArithmeticCheck(StringRef Name, ClangTidyContext *Context)
-      : ClangTidyCheck(Name, Context) {}
-  bool isLanguageVersionSupported(const LangOptions &LangOpts) const override {
-    return LangOpts.CPlusPlus17;
+      : ClangTidyCheck(Name, Context) {
+      llvm::outs() << "Called constructor";
   }
+  /* TODO maybe specify later
+  bool isLanguageVersionSupported(const LangOptions &LangOpts) const override {
+    llvm::outs() << "Called lang supported";
+    return LangOpts.C23;
+  }
+  */
   void registerMatchers(ast_matchers::MatchFinder *Finder) override;
   void check(const ast_matchers::MatchFinder::MatchResult &Result) override;
 };
