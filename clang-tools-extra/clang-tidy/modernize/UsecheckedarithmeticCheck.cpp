@@ -2,6 +2,7 @@
 #include "clang/AST/ASTContext.h"
 #include "clang/ASTMatchers/ASTMatchFinder.h"
 #include "clang/Lex/Lexer.h"
+#include "../utils/IncludeInserter.h"
 
 using namespace clang::ast_matchers;
 
@@ -22,7 +23,7 @@ void UseCheckedArithmeticCheck::registerMatchers(MatchFinder *Finder) {
 				  hasRHS(ignoringImpCasts(declRefExpr().bind("opTwo")))
 			  )
 		  )
-	  )),
+	  ).bind("operation")),
 	  this);
 
 }
@@ -30,7 +31,7 @@ void UseCheckedArithmeticCheck::registerMatchers(MatchFinder *Finder) {
 void UseCheckedArithmeticCheck::check(const MatchFinder::MatchResult &Result) {
   // TODO this will be used to do the rewrite
 
-  const auto *dest = Result.Nodes.getNodeAs<Expr>("dest");
+  const auto *dest = Result.Nodes.getNodeAs<DeclRefExpr>("dest");
   if(dest) {
 	  SourceLocation destBeginLoc = dest->getBeginLoc();
 	  SourceLocation destEndLoc = dest->getEndLoc();
@@ -39,7 +40,7 @@ void UseCheckedArithmeticCheck::check(const MatchFinder::MatchResult &Result) {
 	  llvm::outs() << "Error: dest";
   }
 
-  const auto *opOne = Result.Nodes.getNodeAs<Expr>("opOne");
+  const auto *opOne = Result.Nodes.getNodeAs<DeclRefExpr>("opOne");
   if(opOne) {
 	  SourceLocation opOneBeginLoc = opOne->getBeginLoc();
 	  SourceLocation opOneEndLoc = opOne->getEndLoc();
@@ -48,7 +49,7 @@ void UseCheckedArithmeticCheck::check(const MatchFinder::MatchResult &Result) {
 	  llvm::outs() << "Error: op one";
   }
 
-  const auto *opTwo = Result.Nodes.getNodeAs<Expr>("opTwo");
+  const auto *opTwo = Result.Nodes.getNodeAs<DeclRefExpr>("opTwo");
   if(opTwo) {
 	  SourceLocation opTwoBeginLoc = opTwo->getBeginLoc();
 	  SourceLocation opTwoEndLoc = opTwo->getEndLoc();
@@ -57,10 +58,23 @@ void UseCheckedArithmeticCheck::check(const MatchFinder::MatchResult &Result) {
 	  llvm::outs() << "Error: op one";
   }
 
-  llvm::StringRef replacement = "test";
+  /*
+  llvm::outs() << dest->getNameInfo();
+  */
 
-  DiagnosticBuilder Diag = diag(dest->getBeginLoc(), "use checked arith here: %0");
-  Diag << FixItHint::CreateReplacement(dest->getSourceRange(), replacement);
+  auto replacement = "ckd_add(&" + 
+	  dest->getNameInfo().getAsString() + ", " +
+	  opOne->getNameInfo().getAsString() + ", " +
+	  opTwo->getNameInfo().getAsString() + ");";
+
+  /*
+  llvm::outs() << "START";
+  llvm::outs() << replacement;
+  llvm::outs() << "DONE";
+  */
+
+  DiagnosticBuilder Diag = diag(dest->getBeginLoc(), "use checked arithmetic");
+  Diag << FixItHint::CreateInsertion(dest->getLocation(), replacement);
 
   return;
 }
