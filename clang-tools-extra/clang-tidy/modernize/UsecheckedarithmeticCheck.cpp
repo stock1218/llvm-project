@@ -29,6 +29,7 @@ void UseCheckedArithmeticCheck::registerMatchers(MatchFinder *Finder) {
 
 void UseCheckedArithmeticCheck::check(const MatchFinder::MatchResult &Result) {
   // TODO this will be used to do the rewrite
+
   const auto *dest = Result.Nodes.getNodeAs<Expr>("dest");
   if(dest) {
 	  SourceLocation destBeginLoc = dest->getBeginLoc();
@@ -49,12 +50,17 @@ void UseCheckedArithmeticCheck::check(const MatchFinder::MatchResult &Result) {
 
   const auto *opTwo = Result.Nodes.getNodeAs<Expr>("opTwo");
   if(opTwo) {
-  SourceLocation opTwoBeginLoc = opTwo->getBeginLoc();
-  SourceLocation opTwoEndLoc = opTwo->getEndLoc();
-  auto opTwoDiag = diag(opTwoBeginLoc, "op two");
+	  SourceLocation opTwoBeginLoc = opTwo->getBeginLoc();
+	  SourceLocation opTwoEndLoc = opTwo->getEndLoc();
+	  auto opTwoDiag = diag(opTwoBeginLoc, "op two");
   } else {
 	  llvm::outs() << "Error: op one";
   }
+
+  llvm::StringRef replacement = "test";
+
+  DiagnosticBuilder Diag = diag(dest->getBeginLoc(), "use checked arith here: %0");
+  Diag << FixItHint::CreateReplacement(dest->getSourceRange(), replacement);
 
   return;
 }
