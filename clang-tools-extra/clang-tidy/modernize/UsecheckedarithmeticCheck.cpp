@@ -29,12 +29,8 @@ StatementMatcher makeNonDeclMatcher() {
 		  ).bind("NonDeclOperation");
 }
 
-void UseCheckedArithmeticCheck::registerMatchers(MatchFinder *Finder) {
-
-  Finder->addMatcher(traverse(TK_AsIs, makeNonDeclMatcher()), this);
-  /*
-  Finder->addMatcher(traverse(TK_AsIs,
-	  varDecl(
+ DeclarationMatcher makeDeclMatcher() {
+	  return varDecl(
 		  hasDescendant(
 			  binaryOperator(
 				  hasOperatorName("+"),
@@ -42,9 +38,13 @@ void UseCheckedArithmeticCheck::registerMatchers(MatchFinder *Finder) {
 				  hasRHS(ignoringImpCasts(declRefExpr().bind("opTwo")))
 			  )
 		  )
-	  ).bind("operation")),
-	  this);
-  */
+	  ).bind("DeclOperation");
+}
+
+void UseCheckedArithmeticCheck::registerMatchers(MatchFinder *Finder) {
+
+  Finder->addMatcher(traverse(TK_AsIs, makeNonDeclMatcher()), this);
+  Finder->addMatcher(traverse(TK_AsIs, makeDeclMatcher()), this);
 }
 
 void UseCheckedArithmeticCheck::fixNonDeclOperation(const MatchFinder::MatchResult &Result) {
@@ -66,11 +66,34 @@ void UseCheckedArithmeticCheck::fixNonDeclOperation(const MatchFinder::MatchResu
 	return;
 }
 
+void UseCheckedArithmeticCheck::fixDeclOperation(const MatchFinder::MatchResult &Result) {
+	const auto *MatchedExpr = Result.Nodes.getNodeAs<VarDecl>("DeclOperation");
+
+	const auto *dest = Result.Nodes.getNodeAs<DeclRefExpr>("dest");
+	const auto *opOne = Result.Nodes.getNodeAs<DeclRefExpr>("opOne");
+	const auto *opTwo = Result.Nodes.getNodeAs<DeclRefExpr>("opTwo");
+
+	auto replacement = "if(!ckd_add(&" + 
+		dest->getNameInfo().getAsString() + ", " +
+		opOne->getNameInfo().getAsString() + ", " +
+		opTwo->getNameInfo().getAsString() + ")) {\n" +
+		"assert(false);\n" + "}\n";
+
+	DiagnosticBuilder Diag = diag(dest->getBeginLoc(), "use checked arithmetic");
+	Diag << FixItHint::CreateInsertion(dest->getLocation(), replacement);
+	Diag << IncludeInserter.createIncludeInsertion(Result.Context->getSourceManager().getFileID(MatchedExpr->getBeginLoc()), "<stdckdint.h>");
+	return;
+}
+
 void UseCheckedArithmeticCheck::check(const MatchFinder::MatchResult &Result) {
   // TODO this will be used to do the rewrite
 
+  llvm::outs() << "Checking\n";
+
   if(const auto *MatchedExpr = Result.Nodes.getNodeAs<Expr>("NonDeclOperation")) {
 	  fixNonDeclOperation(Result);
+  } else if(const auto *MatchedExpr = Result.Nodes.getNodeAs<VarDecl>("DeclOperation")) {
+	  fixDeclOperation(Result);
   }
 
   return;
