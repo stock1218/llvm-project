@@ -8,15 +8,29 @@ using namespace clang::ast_matchers;
 
 namespace clang::tidy::modernize {
 
+StatementMatcher makeNonDeclMatcher() {
+	  return binaryOperator(
+			  hasOperatorName("="),
+			  hasLHS(
+				  declRefExpr().bind("dest")
+			  ),
+			  hasRHS(
+				  binaryOperator(
+					  hasOperatorName("+"),
+					  hasLHS(ignoringImpCasts(declRefExpr().bind("opOne"))),
+					  hasRHS(ignoringImpCasts(declRefExpr().bind("opTwo")))
+				  )
+			  )
+		  ).bind("operation");
+}
+
 void UseCheckedArithmeticCheck::registerMatchers(MatchFinder *Finder) {
-	
+
+  Finder->addMatcher(traverse(TK_AsIs, makeNonDeclMatcher()), this);
+  /*
   Finder->addMatcher(traverse(TK_AsIs,
-	  binaryOperator(
-		  hasOperatorName("="),
-		  hasLHS(
-			  declRefExpr().bind("dest")
-		  ),
-		  hasRHS(
+	  varDecl(
+		  hasDescendant(
 			  binaryOperator(
 				  hasOperatorName("+"),
 				  hasLHS(ignoringImpCasts(declRefExpr().bind("opOne"))),
@@ -25,7 +39,7 @@ void UseCheckedArithmeticCheck::registerMatchers(MatchFinder *Finder) {
 		  )
 	  ).bind("operation")),
 	  this);
-
+  */
 }
 
 void UseCheckedArithmeticCheck::registerPPCallbacks(
@@ -35,7 +49,7 @@ void UseCheckedArithmeticCheck::registerPPCallbacks(
 
 void UseCheckedArithmeticCheck::check(const MatchFinder::MatchResult &Result) {
   // TODO this will be used to do the rewrite
-
+	
   const auto *FullExpr = Result.Nodes.getNodeAs<Expr>("operation");
 
   const auto *dest = Result.Nodes.getNodeAs<DeclRefExpr>("dest");
