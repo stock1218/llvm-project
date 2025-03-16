@@ -28,8 +28,15 @@ void UseCheckedArithmeticCheck::registerMatchers(MatchFinder *Finder) {
 
 }
 
+void UseCheckedArithmeticCheck::registerPPCallbacks(
+    const SourceManager &SM, Preprocessor *PP, Preprocessor *ModuleExpanderPP) {
+  IncludeInserter.registerPreprocessor(PP);
+}
+
 void UseCheckedArithmeticCheck::check(const MatchFinder::MatchResult &Result) {
   // TODO this will be used to do the rewrite
+
+  const auto *FullExpr = Result.Nodes.getNodeAs<Expr>("operation");
 
   const auto *dest = Result.Nodes.getNodeAs<DeclRefExpr>("dest");
   if(dest) {
@@ -76,6 +83,8 @@ void UseCheckedArithmeticCheck::check(const MatchFinder::MatchResult &Result) {
 
   DiagnosticBuilder Diag = diag(dest->getBeginLoc(), "use checked arithmetic");
   Diag << FixItHint::CreateInsertion(dest->getLocation(), replacement);
+  llvm::outs() << "Adding inc";
+  Diag << IncludeInserter.createIncludeInsertion(Result.Context->getSourceManager().getFileID(FullExpr->getBeginLoc()), "<stdckdint.h>");
 
   return;
 }
