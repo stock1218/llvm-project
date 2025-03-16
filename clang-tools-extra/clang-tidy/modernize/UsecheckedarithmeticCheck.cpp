@@ -62,10 +62,11 @@ void UseCheckedArithmeticCheck::check(const MatchFinder::MatchResult &Result) {
   llvm::outs() << dest->getNameInfo();
   */
 
-  auto replacement = "ckd_add(&" + 
+  auto replacement = "if(!ckd_add(&" + 
 	  dest->getNameInfo().getAsString() + ", " +
 	  opOne->getNameInfo().getAsString() + ", " +
-	  opTwo->getNameInfo().getAsString() + ");";
+	  opTwo->getNameInfo().getAsString() + ")) {\n" +
+	  "assert(false);\n" + "}\n";
 
   /*
   llvm::outs() << "START";
