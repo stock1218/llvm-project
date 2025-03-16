@@ -29,6 +29,7 @@ public:
 
 private:
   utils::IncludeInserter IncludeInserter;
+  void fixNonDeclOperation(const ast_matchers::MatchFinder::MatchResult &Result);
 };
 
 } // namespace clang::tidy::modernize
