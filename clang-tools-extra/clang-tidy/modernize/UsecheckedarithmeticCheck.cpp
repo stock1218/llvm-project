@@ -54,7 +54,6 @@ std::string getCkdFunction(llvm::StringRef opStr) {
 	}
 }
 
-
 void UseCheckedArithmeticCheck::registerMatchers(MatchFinder *Finder) {
 
   Finder->addMatcher(traverse(TK_AsIs, makeNonDeclMatcher()), this);
