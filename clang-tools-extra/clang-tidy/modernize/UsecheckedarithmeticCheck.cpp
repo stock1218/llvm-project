@@ -21,10 +21,10 @@ StatementMatcher makeNonDeclMatcher() {
 			  ),
 			  hasRHS(
 				  binaryOperator(
-					  hasOperatorName("+"),
+					  hasAnyOperatorName("+", "-", "*"),
 					  hasLHS(ignoringImpCasts(declRefExpr().bind("opOne"))),
 					  hasRHS(ignoringImpCasts(declRefExpr().bind("opTwo")))
-				  )
+				  ).bind("operator")
 			  )
 		  ).bind("NonDeclOperation");
 }
@@ -33,13 +33,27 @@ StatementMatcher makeNonDeclMatcher() {
 	  return varDecl(
 		  hasDescendant(
 			  binaryOperator(
-				  hasOperatorName("+"),
+				  hasAnyOperatorName("+", "-", "*"),
 				  hasLHS(ignoringImpCasts(declRefExpr().bind("opOne"))),
 				  hasRHS(ignoringImpCasts(declRefExpr().bind("opTwo")))
-			  )
+			  ).bind("operator")
 		  )
 	  ).bind("DeclOperation");
 }
+
+std::string getCkdFunction(llvm::StringRef opStr) {
+	if(opStr == "+") {
+		return "ckd_add";
+	} else if (opStr == "-") {
+		return "ckd_sub";
+	} else if (opStr == "*") {
+		return "ckd_mul";
+	} else {
+		llvm::outs() << "Unknown operation to convert\n";
+		return "";
+	}
+}
+
 
 void UseCheckedArithmeticCheck::registerMatchers(MatchFinder *Finder) {
 
@@ -54,7 +68,15 @@ void UseCheckedArithmeticCheck::fixNonDeclOperation(const MatchFinder::MatchResu
 	const auto *opOne = Result.Nodes.getNodeAs<DeclRefExpr>("opOne");
 	const auto *opTwo = Result.Nodes.getNodeAs<DeclRefExpr>("opTwo");
 
-	auto replacement = "if(!ckd_add(&" + 
+	const auto *op = Result.Nodes.getNodeAs<BinaryOperator>("operator");
+	const std::string ckdFunc = getCkdFunction(op->getOpcodeStr());
+
+	if(ckdFunc == "") {
+		llvm::outs() << "Error converting operation.\n";
+		return;
+	}
+
+	auto replacement = "if(!" + ckdFunc + "(&" + 
 		dest->getNameInfo().getAsString() + ", " +
 		opOne->getNameInfo().getAsString() + ", " +
 		opTwo->getNameInfo().getAsString() + ")) {\n" +
@@ -72,11 +94,19 @@ void UseCheckedArithmeticCheck::fixDeclOperation(const MatchFinder::MatchResult 
 	const auto *opOne = Result.Nodes.getNodeAs<DeclRefExpr>("opOne");
 	const auto *opTwo = Result.Nodes.getNodeAs<DeclRefExpr>("opTwo");
 
+	const auto *op = Result.Nodes.getNodeAs<BinaryOperator>("operator");
+	const std::string ckdFunc = getCkdFunction(op->getOpcodeStr());
+
+	if(ckdFunc == "") {
+		llvm::outs() << "Error converting operation.\n";
+		return;
+	}
+
 	const auto destType = MatchedDecl->getInit()->getType().getAsString();
 	const auto destName = MatchedDecl->getNameAsString();
 
 	auto replacement = destType + " " + destName + ";\n" +
-		"if(!ckd_add(&" + 
+		"if(!" + ckdFunc + "(&" + 
 		destName + ", " +
 		opOne->getNameInfo().getAsString() + ", " +
 		opTwo->getNameInfo().getAsString() + ")) {\n" +
@@ -90,8 +120,6 @@ void UseCheckedArithmeticCheck::fixDeclOperation(const MatchFinder::MatchResult 
 
 void UseCheckedArithmeticCheck::check(const MatchFinder::MatchResult &Result) {
   // TODO this will be used to do the rewrite
-
-  llvm::outs() << "Checking\n";
 
   if(const auto *MatchedExpr = Result.Nodes.getNodeAs<Expr>("NonDeclOperation")) {
 	  fixNonDeclOperation(Result);
