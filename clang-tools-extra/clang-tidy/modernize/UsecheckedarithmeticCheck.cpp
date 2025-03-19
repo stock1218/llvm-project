@@ -25,7 +25,7 @@ StatementMatcher makeNonDeclMatcher() {
 }
 
 DeclarationMatcher makeDeclMatcher() {
-  return varDecl(hasDescendant(
+  return varDecl(has(
                      binaryOperator(
                          hasAnyOperatorName("+", "-", "*"),
                          hasLHS(ignoringImpCasts(declRefExpr().bind("opOne"))),
@@ -33,6 +33,18 @@ DeclarationMatcher makeDeclMatcher() {
                          .bind("operator")))
       .bind("DeclOperation");
 }
+/*
+DeclarationMatcher makeDeclMatcher() {
+  return binaryOperator(
+             hasOperatorName("="), hasLHS(declRefExpr().bind("dest")),
+             hasRHS(binaryOperator(
+                        hasAnyOperatorName("+", "-", "*"),
+                        hasLHS(ignoringImpCasts(declRefExpr().bind("opOne"))),
+                        hasRHS(ignoringImpCasts(declRefExpr().bind("opTwo"))))
+                        .bind("operator")))
+      .bind("NonDeclOperation");
+}
+*/
 
 std::string getCkdFunction(llvm::StringRef opStr) {
   if (opStr == "+") {
