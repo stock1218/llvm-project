@@ -30,6 +30,7 @@ public:
 private:
   utils::IncludeInserter IncludeInserter;
   void fixNonDeclOperation(const ast_matchers::MatchFinder::MatchResult &Result);
+  void fixMultiDeclOperation(const ast_matchers::MatchFinder::MatchResult &Result);
   void fixDeclOperation(const ast_matchers::MatchFinder::MatchResult &Result);
 };
 
