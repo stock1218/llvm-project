@@ -51,6 +51,7 @@
 #include "UseUncaughtExceptionsCheck.h"
 #include "UseUsingCheck.h"
 #include "UseCheckedArithmeticCheck.h"
+#include "UseCheckedArithmeticDebugCheck.h"
 
 using namespace clang::ast_matchers;
 
@@ -60,6 +61,8 @@ namespace modernize {
 class ModernizeModule : public ClangTidyModule {
 public:
   void addCheckFactories(ClangTidyCheckFactories &CheckFactories) override {
+    CheckFactories.registerCheck<UseCheckedArithmeticDebugCheck>(
+        "modernize-use-checked-arithmetic-debug");
     CheckFactories.registerCheck<UseCheckedArithmeticCheck>(
         "modernize-use-checked-arithmetic");
     CheckFactories.registerCheck<AvoidBindCheck>("modernize-avoid-bind");

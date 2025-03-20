@@ -50,6 +50,7 @@ add_clang_library(clangTidyModernizeModule
   UseUncaughtExceptionsCheck.cpp
   UseUsingCheck.cpp
   UsecheckedarithmeticCheck.cpp
+  UsecheckedarithmeticdebugCheck.cpp
 
   LINK_LIBS
   clangTidy
