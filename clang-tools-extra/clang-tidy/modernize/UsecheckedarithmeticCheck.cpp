@@ -25,11 +25,11 @@ StatementMatcher makeNonDeclMatcher() {
 }
 
 DeclarationMatcher makeDeclMatcher() {
-  return varDecl(has(binaryOperator(
+  return varDecl(has(ignoringImplicit(binaryOperator(
                          hasAnyOperatorName("+", "-", "*"),
                          hasLHS(ignoringImpCasts(declRefExpr().bind("argOne"))),
                          hasRHS(ignoringImpCasts(declRefExpr().bind("argTwo"))))
-                         .bind("operator")))
+                         .bind("operator"))))
       .bind("DeclOperation");
 }
 
