@@ -85,11 +85,12 @@ void UseCheckedArithmeticCheck::fixNonDeclOperation(
   }
 
   auto replacement =
-      "if(!" + ckdFunc + "(&" + dest->getNameInfo().getAsString() + ", " +
+      "if(" + ckdFunc + "(&" + dest->getNameInfo().getAsString() + ", " +
       argOne->getNameInfo().getAsString() + ", " +
       argTwo->getNameInfo().getAsString() + ")) {\n" + "assert(0);\n" + "}\n";
 
   DiagnosticBuilder Diag = diag(dest->getBeginLoc(), "use checked arithmetic");
+  Diag << FixItHint::CreateRemoval(MatchedExpr->getSourceRange());
   Diag << FixItHint::CreateInsertion(dest->getLocation(), replacement);
   Diag << IncludeInserter.createIncludeInsertion(
       Result.Context->getSourceManager().getFileID(MatchedExpr->getBeginLoc()),
@@ -116,11 +117,9 @@ void UseCheckedArithmeticCheck::fixDeclOperation(
   const auto destName = MatchedDecl->getNameAsString();
 
   auto replacement =
-      destType + " " + destName + ";\n" + "if(!" + ckdFunc + "(&" + destName +
+      destType + " " + destName + ";\n" + "if(" + ckdFunc + "(&" + destName +
       ", " + argOne->getNameInfo().getAsString() + ", " +
-      argTwo->getNameInfo().getAsString() + ")) {\n" + "assert(0);\n" + "}\n" +
-      destName + " = " + argOne->getNameInfo().getAsString() + " " +
-      op->getOpcodeStr().str() + " " + argTwo->getNameInfo().getAsString();
+      argTwo->getNameInfo().getAsString() + ")) {\n" + "assert(0);\n" + "}\n";
 
   DiagnosticBuilder Diag =
       diag(MatchedDecl->getBeginLoc(), "use checked arithmetic");
@@ -158,13 +157,11 @@ void UseCheckedArithmeticCheck::fixMultiDeclOperation(
   }
 
   auto replacement = destType + " " + destName + ";\n";
-  replacement += "if(!" + opOneFunc + "(&" + destName + ", " + argOneName + ", " + argTwoName + ")) {\n";
-  replacement += "assert(0);\n}";
-  replacement += destName + " = " + argOneName + " " + opOne->getOpcodeStr().str() + " " + argTwoName + ";\n";
+  replacement += "if(" + opOneFunc + "(&" + destName + ", " + argOneName + ", " + argTwoName + ")) {\n";
+  replacement += "assert(0);\n};";
 
-  replacement += "if(!" + opTwoFunc + "(&" + destName + ", " + destName + ", " + argThreeName + ")) {\n";
+  replacement += "if(" + opTwoFunc + "(&" + destName + ", " + destName + ", " + argThreeName + ")) {\n";
   replacement += "assert(0);\n}";
-  replacement += destName + " = " + destName + " " + opTwo->getOpcodeStr().str() + " " + argThreeName;
 
   DiagnosticBuilder Diag =
       diag(MatchedDecl->getBeginLoc(), "use checked arithmetic");
