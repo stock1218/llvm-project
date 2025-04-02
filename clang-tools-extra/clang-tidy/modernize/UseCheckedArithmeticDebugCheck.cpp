@@ -17,9 +17,7 @@ void UseCheckedArithmeticDebugCheck::registerMatchers(MatchFinder *Finder) {
   // FIXME: Add matchers.
   Finder->addMatcher(
       binaryOperation(
-          hasAnyOperatorName("+", "-", "*"),
-          hasLHS(ignoringImpCasts(hasType(isInteger()))),
-          hasRHS(ignoringImpCasts(hasType(isInteger()))))
+          hasAnyOperatorName("+", "-", "*"))
           .bind("operation"),
       this);
 }

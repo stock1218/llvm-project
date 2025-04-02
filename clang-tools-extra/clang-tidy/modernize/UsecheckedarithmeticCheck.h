@@ -32,6 +32,7 @@ private:
   void fixNonDeclOperation(const ast_matchers::MatchFinder::MatchResult &Result);
   void fixMultiDeclOperation(const ast_matchers::MatchFinder::MatchResult &Result);
   void fixDeclOperation(const ast_matchers::MatchFinder::MatchResult &Result);
+  void fixStmt(const ast_matchers::MatchFinder::MatchResult &Result);
 };
 
 } // namespace clang::tidy::modernize
