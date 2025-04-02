@@ -15,12 +15,20 @@ namespace clang::tidy::modernize {
 
 void UseCheckedArithmeticDebugCheck::registerMatchers(MatchFinder *Finder) {
   // FIXME: Add matchers.
-  Finder->addMatcher(binaryOperation(hasAnyOperatorName("+", "-", "*")).bind("operation"), this);
+  Finder->addMatcher(
+      binaryOperation(
+          hasAnyOperatorName("+", "-", "*"),
+          hasLHS(ignoringImpCasts(hasType(isInteger()))),
+          hasRHS(ignoringImpCasts(hasType(isInteger()))))
+          .bind("operation"),
+      this);
 }
 
-void UseCheckedArithmeticDebugCheck::check(const MatchFinder::MatchResult &Result) {
+void UseCheckedArithmeticDebugCheck::check(
+    const MatchFinder::MatchResult &Result) {
   // FIXME: Add callback implementation.
-  const auto *MatchedOperation = Result.Nodes.getNodeAs<BinaryOperator>("operation");
+  const auto *MatchedOperation =
+      Result.Nodes.getNodeAs<BinaryOperator>("operation");
   diag(MatchedOperation->getBeginLoc(), "Potential checked operation");
 }
 
