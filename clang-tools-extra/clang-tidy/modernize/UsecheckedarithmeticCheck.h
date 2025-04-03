@@ -39,10 +39,9 @@ private:
   utils::IncludeInserter IncludeInserter;
   std::string HandleImport;
   std::string HandleCode;
-  void fixNonDeclOperation(const ast_matchers::MatchFinder::MatchResult &Result);
-  void fixMultiDeclOperation(const ast_matchers::MatchFinder::MatchResult &Result);
-  void fixDeclOperation(const ast_matchers::MatchFinder::MatchResult &Result);
-  void fixStmt(const ast_matchers::MatchFinder::MatchResult &Result);
+  void fixNonAssignmentOp(const ast_matchers::MatchFinder::MatchResult &Result);
+  void fixAssignmentOp(const ast_matchers::MatchFinder::MatchResult &Result);
+  void fixUnaryOp(const ast_matchers::MatchFinder::MatchResult &Result);
 };
 
 } // namespace clang::tidy::modernize
