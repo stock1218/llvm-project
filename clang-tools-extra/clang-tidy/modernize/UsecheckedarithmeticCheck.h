@@ -26,8 +26,8 @@ public:
   */
 
   void storeOptions(ClangTidyOptions::OptionMap &Opts) override {
-      Options.store(Opts, "handleImport", HandleImport);
-      Options.store(Opts, "handleCode", HandleCode);
+    Options.store(Opts, "handleImport", HandleImport);
+    Options.store(Opts, "handleCode", HandleCode);
   }
 
   void registerPPCallbacks(const SourceManager &SM, Preprocessor *PP,

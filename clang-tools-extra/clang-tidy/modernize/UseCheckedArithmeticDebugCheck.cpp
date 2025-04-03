@@ -15,35 +15,27 @@ namespace clang::tidy::modernize {
 
 void UseCheckedArithmeticDebugCheck::registerMatchers(MatchFinder *Finder) {
   // Matcher for binops
-  Finder->addMatcher(
-      binaryOperation(
-          hasAnyOperatorName("+", "-", "*"))
-          //hasLHS(ignoringImpCasts(hasType(isInteger()))),
-          //hasRHS(ignoringImpCasts(hasType(isInteger()))))
-          .bind("operation"),
-      this);
+  Finder->addMatcher(binaryOperation(hasAnyOperatorName("+", "-", "*"))
+                         // hasLHS(ignoringImpCasts(hasType(isInteger()))),
+                         // hasRHS(ignoringImpCasts(hasType(isInteger()))))
+                         .bind("operation"),
+                     this);
 
   // Matcher for unary ops
   Finder->addMatcher(
-      unaryOperator(
-          hasAnyOperatorName("++", "--"))
-          .bind("operation"),
-      this);
+      unaryOperator(hasAnyOperatorName("++", "--")).bind("operation"), this);
 
   // Matcher for compound assignment
-  Finder->addMatcher(
-      binaryOperation(
-          isAssignmentOperator(),
-          hasAnyOperatorName("+=", "-=", "*="))
-          .bind("operation"),
-      this);
+  Finder->addMatcher(binaryOperation(isAssignmentOperator(),
+                                     hasAnyOperatorName("+=", "-=", "*="))
+                         .bind("operation"),
+                     this);
 }
 
 void UseCheckedArithmeticDebugCheck::check(
     const MatchFinder::MatchResult &Result) {
   // FIXME: Add callback implementation.
-  const auto *MatchedOperation =
-      Result.Nodes.getNodeAs<Expr>("operation");
+  const auto *MatchedOperation = Result.Nodes.getNodeAs<Expr>("operation");
   diag(MatchedOperation->getBeginLoc(), "Potential checked operation");
 }
 
