@@ -18,6 +18,8 @@ void UseCheckedArithmeticDebugCheck::registerMatchers(MatchFinder *Finder) {
   Finder->addMatcher(
       binaryOperation(
           hasAnyOperatorName("+", "-", "*"))
+          //hasLHS(ignoringImpCasts(hasType(isInteger()))),
+          //hasRHS(ignoringImpCasts(hasType(isInteger()))))
           .bind("operation"),
       this);
 }

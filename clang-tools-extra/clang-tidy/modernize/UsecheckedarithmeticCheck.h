@@ -13,6 +13,8 @@ class UseCheckedArithmeticCheck : public ClangTidyCheck {
 public:
   UseCheckedArithmeticCheck(StringRef Name, ClangTidyContext *Context)
       : ClangTidyCheck(Name, Context),
+        HandleImport(Options.get("handleImport", "__unset")),
+        HandleCode(Options.get("handleCode", "__unset")),
         IncludeInserter(Options.getLocalOrGlobal("IncludeStyle",
                                                  utils::IncludeSorter::IS_LLVM),
                         areDiagsSelfContained()) {}
@@ -22,6 +24,12 @@ public:
     return LangOpts.C23;
   }
   */
+
+  void storeOptions(ClangTidyOptions::OptionMap &Opts) override {
+      Options.store(Opts, "handleImport", HandleImport);
+      Options.store(Opts, "handleCode", HandleCode);
+  }
+
   void registerPPCallbacks(const SourceManager &SM, Preprocessor *PP,
                            Preprocessor *ModuleExpanderPP) override;
   void registerMatchers(ast_matchers::MatchFinder *Finder) override;
@@ -29,6 +37,8 @@ public:
 
 private:
   utils::IncludeInserter IncludeInserter;
+  std::string HandleImport;
+  std::string HandleCode;
   void fixNonDeclOperation(const ast_matchers::MatchFinder::MatchResult &Result);
   void fixMultiDeclOperation(const ast_matchers::MatchFinder::MatchResult &Result);
   void fixDeclOperation(const ast_matchers::MatchFinder::MatchResult &Result);
