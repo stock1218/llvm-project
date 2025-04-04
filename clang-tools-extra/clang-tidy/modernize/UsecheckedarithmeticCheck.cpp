@@ -29,7 +29,7 @@ StatementMatcher makeUnaryMatcher() {
   return unaryOperator(hasAnyOperatorName("++", "--"),
                        hasUnaryOperand(ignoringImpCasts(hasType(isInteger()))),
                        hasUnaryOperand(ignoringImpCasts(anyOf(
-                           expr().bind("arg"), integerLiteral().bind("argO")))))
+                           expr().bind("arg"), integerLiteral().bind("arg")))))
       .bind("UnaryOp");
 }
 
@@ -85,20 +85,27 @@ void UseCheckedArithmeticCheck::fixAssignmentOp(
 
   const SourceManager &sm = *Result.SourceManager;
   const LangOptions &langOpts = Result.Context->getLangOpts();
-  std::string argOneSource;
+  std::string destSource, argSource;
+  std::string destType, argType;
 
+  const clang::Expr *dest;
   const clang::Expr *arg;
 
   // If it's an expression
+  if (Result.Nodes.getNodeAs<Expr>("dest")) {
+    dest = Result.Nodes.getNodeAs<Expr>("dest");
+  } else { // if it's an integer literal
+    dest = Result.Nodes.getNodeAs<IntegerLiteral>("dest");
+  }
+
+  // Same logic for argTwo
   if (Result.Nodes.getNodeAs<Expr>("arg")) {
     arg = Result.Nodes.getNodeAs<Expr>("arg");
-  } else { // if it's an integer literal
+  } else {
     arg = Result.Nodes.getNodeAs<IntegerLiteral>("arg");
   }
 
-  // Extract the source with this expression
-  argOneSource = getExprSourceString(arg, sm, langOpts);
-
+  // Get appropriate checked function
   const std::string ckdFunc = getCkdFunction(MatchedExpr->getOpcodeStr());
 
   if (ckdFunc == "") {
@@ -107,11 +114,22 @@ void UseCheckedArithmeticCheck::fixAssignmentOp(
     return;
   }
 
-  auto replacement = "({ " + resultType + " tmp;\n";
-  replacement += "if(" + ckdFunc + "(&tmp" + ", " + argOneSource + ", " +
-                 argOneSource + ")) {\n";
+  // Extract the source for dest and arg
+  destSource = getExprSourceString(dest, sm, langOpts);
+  argSource = getExprSourceString(arg, sm, langOpts);
+
+  // Get types of dest and source
+  destType = dest->getType().getAsString();
+  argType = arg->getType().getAsString();
+
+
+  // TODO get result type of lhs and rhs, kind of like binary operator. Create tmp for each then add them together.
+
+  auto replacement = "({ " + destType + "* dest = " + "&" + destSource + ";\n";
+  replacement += argType + " arg = " + argSource + ";\n";
+  replacement += "if(" + ckdFunc + "(dest, *dest, arg)) {";
   replacement += HandleCode + "\n};";
-  replacement += "tmp;})";
+  replacement += "*dest;})";
 
   DiagnosticBuilder Diag =
       diag(MatchedExpr->getBeginLoc(), "use checked arithmetic");
@@ -131,16 +149,15 @@ void UseCheckedArithmeticCheck::fixUnaryOp(
     const MatchFinder::MatchResult &Result) {
   const auto *MatchedExpr = Result.Nodes.getNodeAs<UnaryOperator>("UnaryOp");
 
-  const auto resultType = MatchedExpr->getType().getAsString();
-
   const SourceManager &sm = *Result.SourceManager;
   const LangOptions &langOpts = Result.Context->getLangOpts();
-  std::string argOneSource;
+  std::string argSource, argType;
 
   const clang::Expr *arg = Result.Nodes.getNodeAs<Expr>("arg");
 
   // Extract the source with this expression
-  argOneSource = getExprSourceString(arg, sm, langOpts);
+  argSource = getExprSourceString(arg, sm, langOpts);
+  argType = arg->getType().getAsString();
 
   const std::string ckdFunc =
       getCkdFunction(MatchedExpr->getOpcodeStr(MatchedExpr->getOpcode()));
@@ -156,23 +173,22 @@ void UseCheckedArithmeticCheck::fixUnaryOp(
   case clang::UO_PreInc:
   case clang::UO_PreDec:
     // handle fix for prefix
-    replacement = "({ " + resultType + " tmp;\n";
-    replacement += "if(" + ckdFunc + "(&tmp" + ", " + argOneSource + ", " +
-                   argOneSource + ")) {\n";
+    replacement = "({ " + argType + "* tmp = &" + argSource + ";\n";
+    replacement += "if(" + ckdFunc + "(&tmp, *tmp, *tmp)) {\n";
     replacement += HandleCode + "\n};";
-    replacement += "tmp;})";
+    replacement += "*tmp;})";
 
     break;
 
   case clang::UO_PostInc:
   case clang::UO_PostDec:
     // handle fix for postfix
-    replacement = "({ " + resultType + " tmpOld = " + argOneSource + ";\n";
-    replacement = resultType + " tmp;\n";
-    replacement += "if(" + ckdFunc + "(&tmp" + ", " + argOneSource + ", " +
-                   argOneSource + ")) {\n";
+    replacement = "({ " + argType + "* tmp = &" + argSource + ";\n";
+    replacement += argType + " oldTmp = *tmp;\n";
+    replacement += "if(" + ckdFunc + "(tmp, *tmp, *tmp)) {\n";
     replacement += HandleCode + "\n};";
-    replacement += "tmpOld;})";
+    replacement += "oldTmp;})";
+
     break;
 
   default:
@@ -204,6 +220,7 @@ void UseCheckedArithmeticCheck::fixNonAssignmentOp(
   const SourceManager &sm = *Result.SourceManager;
   const LangOptions &langOpts = Result.Context->getLangOpts();
   std::string argOneSource, argTwoSource;
+  std::string argOneType, argTwoType;
 
   const clang::Expr *argOne;
   const clang::Expr *argTwo;
@@ -224,8 +241,10 @@ void UseCheckedArithmeticCheck::fixNonAssignmentOp(
 
   // Extract the source with this expression
   argOneSource = getExprSourceString(argOne, sm, langOpts);
-
   argTwoSource = getExprSourceString(argTwo, sm, langOpts);
+
+  argOneType = argOne->getType().getAsString();
+  argTwoType = argTwo->getType().getAsString();
 
   const std::string ckdFunc = getCkdFunction(MatchedExpr->getOpcodeStr());
 
@@ -235,11 +254,12 @@ void UseCheckedArithmeticCheck::fixNonAssignmentOp(
     return;
   }
 
-  auto replacement = "({ " + resultType + " tmp;\n";
-  replacement += "if(" + ckdFunc + "(&tmp" + ", " + argOneSource + ", " +
-                 argTwoSource + ")) {\n";
+  auto replacement = "({ " + resultType + "* dest;\n";
+  replacement += argOneType + " argOne = " + argOneSource + ";\n";
+  replacement += argTwoType + " argTwo = " + argTwoSource + ";\n";
+  replacement += "if(" + ckdFunc + "(dest, argOne, argTwo)) {";
   replacement += HandleCode + "\n};";
-  replacement += "tmp;})";
+  replacement += "*dest;})";
 
   DiagnosticBuilder Diag =
       diag(MatchedExpr->getBeginLoc(), "use checked arithmetic");
