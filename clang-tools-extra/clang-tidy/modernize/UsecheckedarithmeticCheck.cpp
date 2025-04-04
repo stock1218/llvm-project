@@ -46,11 +46,11 @@ StatementMatcher makeAssignmentMatcher() {
 }
 
 std::string getCkdFunction(llvm::StringRef opStr) {
-  if (opStr == "+" || "++" || "+=") {
+  if (opStr == "+" || opStr == "++" || opStr == "+=") {
     return "ckd_add";
-  } else if (opStr == "-" || "--" || "-=") {
+  } else if (opStr == "-" || opStr == "--" || opStr == "-=") {
     return "ckd_sub";
-  } else if (opStr == "*" || "*=") {
+  } else if (opStr == "*" || opStr == "*=") {
     return "ckd_mul";
   } else {
     llvm::errs() << "Unknown operation to convert: " << opStr << "\n";
@@ -123,8 +123,6 @@ void UseCheckedArithmeticCheck::fixAssignmentOp(
   argType = arg->getType().getAsString();
 
 
-  // TODO get result type of lhs and rhs, kind of like binary operator. Create tmp for each then add them together.
-
   auto replacement = "({ " + destType + "* dest = " + "&" + destSource + ";\n";
   replacement += argType + " arg = " + argSource + ";\n";
   replacement += "if(" + ckdFunc + "(dest, *dest, arg)) {";
@@ -174,7 +172,7 @@ void UseCheckedArithmeticCheck::fixUnaryOp(
   case clang::UO_PreDec:
     // handle fix for prefix
     replacement = "({ " + argType + "* tmp = &" + argSource + ";\n";
-    replacement += "if(" + ckdFunc + "(&tmp, *tmp, *tmp)) {\n";
+    replacement += "if(" + ckdFunc + "(tmp, *tmp, 1)) {\n";
     replacement += HandleCode + "\n};";
     replacement += "*tmp;})";
 
@@ -185,7 +183,7 @@ void UseCheckedArithmeticCheck::fixUnaryOp(
     // handle fix for postfix
     replacement = "({ " + argType + "* tmp = &" + argSource + ";\n";
     replacement += argType + " oldTmp = *tmp;\n";
-    replacement += "if(" + ckdFunc + "(tmp, *tmp, *tmp)) {\n";
+    replacement += "if(" + ckdFunc + "(tmp, *tmp, 1)) {\n";
     replacement += HandleCode + "\n};";
     replacement += "oldTmp;})";
 
@@ -254,12 +252,12 @@ void UseCheckedArithmeticCheck::fixNonAssignmentOp(
     return;
   }
 
-  auto replacement = "({ " + resultType + "* dest;\n";
+  auto replacement = "({ " + resultType + " dest;\n";
   replacement += argOneType + " argOne = " + argOneSource + ";\n";
   replacement += argTwoType + " argTwo = " + argTwoSource + ";\n";
-  replacement += "if(" + ckdFunc + "(dest, argOne, argTwo)) {";
+  replacement += "if(" + ckdFunc + "(&dest, argOne, argTwo)) {";
   replacement += HandleCode + "\n};";
-  replacement += "*dest;})";
+  replacement += "dest;})";
 
   DiagnosticBuilder Diag =
       diag(MatchedExpr->getBeginLoc(), "use checked arithmetic");
