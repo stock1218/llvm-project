@@ -130,7 +130,7 @@ void UseCheckedArithmeticCheck::fixAssignmentOp(
   replacement += "*dest;})";
 
   DiagnosticBuilder Diag =
-      diag(MatchedExpr->getBeginLoc(), "use checked arithmetic");
+      diag(MatchedExpr->getBeginLoc(), "assignment operation can be rewritten to use checked arithmetic");
   Diag << FixItHint::CreateReplacement(MatchedExpr->getSourceRange(),
                                        replacement);
 
@@ -196,7 +196,7 @@ void UseCheckedArithmeticCheck::fixUnaryOp(
   }
 
   DiagnosticBuilder Diag =
-      diag(MatchedExpr->getBeginLoc(), "use checked arithmetic");
+      diag(MatchedExpr->getBeginLoc(), "unary operation can be rewritten to use checked arithmetic");
   Diag << FixItHint::CreateReplacement(MatchedExpr->getSourceRange(),
                                        replacement);
 
@@ -260,7 +260,7 @@ void UseCheckedArithmeticCheck::fixNonAssignmentOp(
   replacement += "dest;})";
 
   DiagnosticBuilder Diag =
-      diag(MatchedExpr->getBeginLoc(), "use checked arithmetic");
+      diag(MatchedExpr->getBeginLoc(), "non-assignment operation can be rewritten to use checked arithmetic");
   Diag << FixItHint::CreateReplacement(MatchedExpr->getSourceRange(),
                                        replacement);
 

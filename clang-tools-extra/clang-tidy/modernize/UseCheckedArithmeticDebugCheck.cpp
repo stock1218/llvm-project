@@ -18,25 +18,33 @@ void UseCheckedArithmeticDebugCheck::registerMatchers(MatchFinder *Finder) {
   Finder->addMatcher(binaryOperation(hasAnyOperatorName("+", "-", "*"))
                          // hasLHS(ignoringImpCasts(hasType(isInteger()))),
                          // hasRHS(ignoringImpCasts(hasType(isInteger()))))
-                         .bind("operation"),
+                         .bind("Non-AssignmentOp"),
                      this);
 
   // Matcher for unary ops
   Finder->addMatcher(
-      unaryOperator(hasAnyOperatorName("++", "--")).bind("operation"), this);
+      unaryOperator(hasAnyOperatorName("++", "--")).bind("UnaryOp"), this);
 
   // Matcher for compound assignment
   Finder->addMatcher(binaryOperation(isAssignmentOperator(),
                                      hasAnyOperatorName("+=", "-=", "*="))
-                         .bind("operation"),
+                         .bind("AssignmentOp"),
                      this);
 }
 
 void UseCheckedArithmeticDebugCheck::check(
     const MatchFinder::MatchResult &Result) {
   // FIXME: Add callback implementation.
-  const auto *MatchedOperation = Result.Nodes.getNodeAs<Expr>("operation");
-  diag(MatchedOperation->getBeginLoc(), "Potential checked operation");
+  if(Result.Nodes.getNodeAs<Expr>("Non-AssignmentOp")) {
+	  const auto *MatchedOperation = Result.Nodes.getNodeAs<Expr>("Non-AssignmentOp");
+	  diag(MatchedOperation->getBeginLoc(), "Potential checked operation (non-assignment operation)");
+  } else if(Result.Nodes.getNodeAs<Expr>("AssignmentOp")) {
+	  const auto *MatchedOperation = Result.Nodes.getNodeAs<Expr>("AssignmentOp");
+	  diag(MatchedOperation->getBeginLoc(), "Potential checked operation (assignment operation)");
+  } else if(Result.Nodes.getNodeAs<Expr>("UnaryOp")) {
+	  const auto *MatchedOperation = Result.Nodes.getNodeAs<Expr>("UnaryOp");
+	  diag(MatchedOperation->getBeginLoc(), "Potential checked operation (unary operation)");
+  }
 }
 
 } // namespace clang::tidy::modernize
