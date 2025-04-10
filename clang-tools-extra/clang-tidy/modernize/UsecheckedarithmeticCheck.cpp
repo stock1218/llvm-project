@@ -13,16 +13,25 @@ void UseCheckedArithmeticCheck::registerPPCallbacks(
   IncludeInserter.registerPreprocessor(PP);
 }
 
-StatementMatcher makeNonAssignmentMatcher() {
-  return binaryOperation(
-             hasAnyOperatorName("+", "-", "*"),
-             hasLHS(ignoringImpCasts(hasType(isInteger()))),
-             hasLHS(ignoringImpCasts(anyOf(expr().bind("argOne"),
-                                           integerLiteral().bind("argOne")))),
-             hasRHS(ignoringImpCasts(hasType(isInteger()))),
-             hasRHS(ignoringImpCasts(anyOf(expr().bind("argTwo"),
-                                           integerLiteral().bind("argTwo")))))
-      .bind("Non-AssignmentOp");
+StatementMatcher makeCastNonAssignmentMatcher() {
+    return binaryOperator(hasAnyOperatorName("+", "-", "*"),
+                          hasParent(expr().bind("parent-expr")),
+                          hasLHS(ignoringImpCasts(hasType(isInteger()))),
+                          hasLHS(ignoringImpCasts(expr().bind("argOne"))),
+                          hasRHS(ignoringImpCasts(hasType(isInteger()))),
+                          hasRHS(ignoringImpCasts(expr().bind("argTwo"))))
+           .bind("Non-AssignmentOp");
+
+}
+
+StatementMatcher makeGenericNonAssignmentMatcher() {
+    return binaryOperator(hasAnyOperatorName("+", "-", "*"),
+                          hasLHS(ignoringImpCasts(hasType(isInteger()))),
+                          hasLHS(ignoringImpCasts(expr().bind("argOne"))),
+                          hasRHS(ignoringImpCasts(hasType(isInteger()))),
+                          hasRHS(ignoringImpCasts(expr().bind("argTwo"))))
+           .bind("Non-AssignmentOp");
+
 }
 
 StatementMatcher makeUnaryMatcher() {
@@ -59,7 +68,8 @@ std::string getCkdFunction(llvm::StringRef opStr) {
 }
 
 void UseCheckedArithmeticCheck::registerMatchers(MatchFinder *Finder) {
-  Finder->addMatcher(traverse(TK_AsIs, makeNonAssignmentMatcher()), this);
+  Finder->addMatcher(traverse(TK_AsIs, makeCastNonAssignmentMatcher()), this);
+  Finder->addMatcher(traverse(TK_AsIs, makeGenericNonAssignmentMatcher()), this);
   Finder->addMatcher(traverse(TK_AsIs, makeAssignmentMatcher()), this);
   Finder->addMatcher(traverse(TK_AsIs, makeUnaryMatcher()), this);
 }
@@ -213,7 +223,17 @@ void UseCheckedArithmeticCheck::fixNonAssignmentOp(
     const MatchFinder::MatchResult &Result) {
   const auto *MatchedExpr =
       Result.Nodes.getNodeAs<BinaryOperator>("Non-AssignmentOp");
-  const auto resultType = MatchedExpr->getType().getAsString();
+
+  std::string resultType;
+
+  // If there is a cast above this node we need to use that type as the dest
+  if(Result.Nodes.getNodeAs<Expr>("parent-expr")) {
+    const auto result = Result.Nodes.getNodeAs<Expr>("parent-expr");
+    resultType = result->getType().getAsString();
+
+  } else { // otherwise we can just use the type it's going into
+      resultType = MatchedExpr->getType().getAsString();
+  }
 
   const SourceManager &sm = *Result.SourceManager;
   const LangOptions &langOpts = Result.Context->getLangOpts();
