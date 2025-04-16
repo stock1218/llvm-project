@@ -15,7 +15,7 @@ void UseCheckedArithmeticCheck::registerPPCallbacks(
 
 StatementMatcher makeCastNonAssignmentMatcher() {
     return binaryOperator(hasAnyOperatorName("+", "-", "*"),
-                          hasParent(expr().bind("parent-expr")),
+                          hasParent(expr(hasType(isInteger()), unless(isConstQualified())).bind("parent-expr")),
                           hasLHS(ignoringImpCasts(hasType(isInteger()))),
                           hasLHS(ignoringImpCasts(expr().bind("argOne"))),
                           hasRHS(ignoringImpCasts(hasType(isInteger()))),
@@ -141,6 +141,7 @@ void UseCheckedArithmeticCheck::fixAssignmentOp(
 
   DiagnosticBuilder Diag =
       diag(MatchedExpr->getBeginLoc(), "assignment operation can be rewritten to use checked arithmetic");
+
   Diag << FixItHint::CreateReplacement(MatchedExpr->getSourceRange(),
                                        replacement);
 
@@ -243,19 +244,8 @@ void UseCheckedArithmeticCheck::fixNonAssignmentOp(
   const clang::Expr *argOne;
   const clang::Expr *argTwo;
 
-  // If it's an expression
-  if (Result.Nodes.getNodeAs<Expr>("argOne")) {
-    argOne = Result.Nodes.getNodeAs<Expr>("argOne");
-  } else { // if it's an integer literal
-    argOne = Result.Nodes.getNodeAs<IntegerLiteral>("argOne");
-  }
-
-  // Same logic for argTwo
-  if (Result.Nodes.getNodeAs<Expr>("argTwo")) {
-    argTwo = Result.Nodes.getNodeAs<Expr>("argTwo");
-  } else {
-    argTwo = Result.Nodes.getNodeAs<IntegerLiteral>("argTwo");
-  }
+  argOne = Result.Nodes.getNodeAs<Expr>("argOne");
+  argTwo = Result.Nodes.getNodeAs<Expr>("argTwo");
 
   // Extract the source with this expression
   argOneSource = getExprSourceString(argOne, sm, langOpts);
