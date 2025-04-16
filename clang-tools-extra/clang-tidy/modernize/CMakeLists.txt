@@ -51,6 +51,7 @@ add_clang_library(clangTidyModernizeModule
   UseUsingCheck.cpp
   UsecheckedarithmeticCheck.cpp
   UsecheckedarithmeticdebugCheck.cpp
+  UsecheckedarithmetictypeddebugCheck.cpp
 
   LINK_LIBS
   clangTidy

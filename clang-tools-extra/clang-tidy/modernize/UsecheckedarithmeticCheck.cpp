@@ -15,7 +15,7 @@ void UseCheckedArithmeticCheck::registerPPCallbacks(
 
 StatementMatcher makeCastNonAssignmentMatcher() {
     return binaryOperator(hasAnyOperatorName("+", "-", "*"),
-                          hasParent(expr(hasType(isInteger()), unless(isConstQualified())).bind("parent-expr")),
+                          hasParent(expr(hasType(isInteger()), unless(hasType(isConstQualified()))).bind("parent-expr")),
                           hasLHS(ignoringImpCasts(hasType(isInteger()))),
                           hasLHS(ignoringImpCasts(expr().bind("argOne"))),
                           hasRHS(ignoringImpCasts(hasType(isInteger()))),

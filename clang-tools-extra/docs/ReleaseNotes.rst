@@ -214,6 +214,11 @@ New checks
 
   FIXME: add release notes.
 
+- New :doc:`modernize-UseCheckedArithmeticTypedDebug
+  <clang-tidy/checks/modernize/UseCheckedArithmeticTypedDebug>` check.
+
+  FIXME: add release notes.
+
 - New :doc:`modernize-use-checked-arithmetic
   <clang-tidy/checks/modernize/use-checked-arithmetic>` check.
 

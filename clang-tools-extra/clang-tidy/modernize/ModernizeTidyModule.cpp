@@ -52,6 +52,7 @@
 #include "UseUsingCheck.h"
 #include "UseCheckedArithmeticCheck.h"
 #include "UseCheckedArithmeticDebugCheck.h"
+#include "UseCheckedArithmeticTypedDebugCheck.h"
 
 using namespace clang::ast_matchers;
 
@@ -61,6 +62,8 @@ namespace modernize {
 class ModernizeModule : public ClangTidyModule {
 public:
   void addCheckFactories(ClangTidyCheckFactories &CheckFactories) override {
+    CheckFactories.registerCheck<UseCheckedArithmeticTypedDebugCheck>(
+        "modernize-use-checked-arithmetic-typed-debug");
     CheckFactories.registerCheck<UseCheckedArithmeticDebugCheck>(
         "modernize-use-checked-arithmetic-debug");
     CheckFactories.registerCheck<UseCheckedArithmeticCheck>(
